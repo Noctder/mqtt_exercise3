@@ -74,17 +74,5 @@ Esta página web permite visualizar en tiempo real los datos obtenidos por el ES
 
 ---
 
-## 📌 Posibles Mejoras
-✅ Agregar autenticación en MQTT para mayor seguridad.  
-✅ Optimizar la frecuencia de envío de datos para reducir consumo de energía.  
-✅ Implementar gráficos en la web para visualizar tendencias de temperatura y humedad.
-
----
-
-## 📩 Contacto
-Si tienes dudas o mejoras para el código, siéntete libre de contribuir o contactar a través de GitHub.
-
----
-
-📌 **Desarrollado por [Tu Nombre]** 🚀
+📌 **Desarrollado por Francisco Javier Zuñiga Milanez** 🚀
 
