@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Datos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1E3C72, #2A5298);
+            color: white;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            font-weight: 700;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            width: 300px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+        }
+        #status {
+            font-size: 1.2em;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            width: 300px;
+            margin-top: 10px;
+            background: #ccc;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .status-connected {
+            background: #2ecc71;
+            color: white;
+        }
+        .status-error {
+            background: #e74c3c;
+            color: white;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 150px;
+            color: white;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        #btnStart {
+            background: #28a745;
+        }
+        #btnStart:hover {
+            background: #218838;
+        }
+        #btnStop {
+            background: #dc3545;
+        }
+        #btnStop:hover {
+            background: #c82333;
+        }
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Datos del Sensor DHT22</h1>
+    
+    <div class="container">
+        <div id="temperature" class="card">Temperatura: Cargando...</div>
+        <div id="humidity" class="card">Humedad: Cargando...</div>
+        <div id="status" class="card">Estado: En espera...</div>
+
+        <div class="buttons">
+            <button id="btnStart">Encender LED</button>
+            <button id="btnStop">Apagar LED</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        const client = mqtt.connect('ws://broker.emqx.io:8083/mqtt');
+
+        client.on('connect', () => {
+            console.log('Conectado al broker MQTT');
+            document.getElementById('status').innerText = 'Estado: En espera';
+            document.getElementById('status').classList.add('status-connected');
+            client.subscribe('data/temp');
+        });
+
+        client.on('message', (topic, message) => {
+            if (topic === 'data/temp') {
+                try {
+                    const data = JSON.parse(message.toString()); // Convertir mensaje a objeto JSON
+                    
+                    if (data.temperatura !== undefined) {
+                        document.getElementById('temperature').innerText = 'Temperatura: ' + data.temperatura + ' °C';
+                    }
+                    
+                    if (data.humedad !== undefined) {
+                        document.getElementById('humidity').innerText = 'Humedad: ' + data.humedad + ' %';
+                    }
+                } catch (error) {
+                    console.error("Error al parsear JSON:", error);
+                }
+            }
+        });
+
+        client.on('error', () => {
+            document.getElementById('status').innerText = 'Estado: Error de conexión';
+            document.getElementById('status').classList.add('status-error');
+        });
+
+        document.getElementById('btnStart').addEventListener('click', () => {
+            client.publish('data/led', 'on', { qos: 1, retain: true });
+            document.getElementById('status').innerText = 'Estado: LED Encendido';
+        });
+
+        document.getElementById('btnStop').addEventListener('click', () => {
+            client.publish('data/led', 'off', { qos: 1, retain: true });
+            document.getElementById('status').innerText = 'Estado: LED Apagado';
+        });
+    </script>
+</body>
+</html>
